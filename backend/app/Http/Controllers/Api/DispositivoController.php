@@ -4,34 +4,73 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispositivo;
-use Illuminate\Http\Request;
+use App\Services\Api\IFixitService; 
+use App\Services\Api\IcecatService; // ¡Restauramos Icecat!
 
 class DispositivoController extends Controller
 {
-    /**
-     * Devuelve la lista de todos los dispositivos (Para el buscador de la Home)
-     */
     public function index()
     {
-        // Buscamos todos los dispositivos en la base de datos
-        $dispositivos = Dispositivo::all();
-        
-        // Los devolvemos en formato JSON con un código 200 (OK)
-        return response()->json($dispositivos, 200);
+        $catalogo = Dispositivo::all();
+        return response()->json($catalogo);
     }
 
-    /**
-     * Devuelve un dispositivo concreto y sus averías (Para la vista de Presupuesto)
-     */
-    public function show($id)
+    public function show(IFixitService $ifixitService, IcecatService $icecatService, $id)
     {
-        // Buscamos el dispositivo por su ID y le "cargamos" sus averías asociadas
-        $dispositivo = Dispositivo::with('averias')->find($id);
+        $dispositivo = Dispositivo::find($id);
 
         if (!$dispositivo) {
-            return response()->json(['mensaje' => 'Dispositivo no encontrado'], 404);
+            return response()->json(['error' => 'Dispositivo no encontrado'], 404);
         }
 
-        return response()->json($dispositivo, 200);
+        $datosIFixit = null;
+        $datosIcecat = null;
+        $sobrecoste = 0;
+
+        // === 1. LÓGICA PARA MÓVILES Y TABLETS (iFixit) ===
+        if ($dispositivo->tipo === 'Móvil' || $dispositivo->tipo === 'Tablet') {
+            
+            $dificultad = $ifixitService->obtenerDificultad($dispositivo->modelo);
+            $dificultadLimpia = strtolower($dificultad);
+
+            if ($dificultadLimpia == 'difficult' || $dificultadLimpia == 'very difficult') {
+                $sobrecoste = 50;
+            } elseif ($dificultadLimpia == 'moderate') {
+                $sobrecoste = 20;
+            }
+
+            $datosIFixit = [
+                'dificultad_original' => $dificultad,
+                'coste_extra_mano_obra' => $sobrecoste
+            ];
+        }
+
+        // === 2. LÓGICA PARA PORTÁTILES (Icecat) ===
+        if ($dispositivo->tipo === 'Portátil') {
+            $infoPortatil = $icecatService->obtenerDatosPortatil($dispositivo->marca, $dispositivo->modelo);
+            
+            if ($infoPortatil) {
+                $esAntiguo = false;
+                if ($infoPortatil['fecha_lanzamiento']) {
+                    $anyoDespliegue = (int) date('Y', strtotime($infoPortatil['fecha_lanzamiento']));
+                    $anyoActual = (int) date('Y');
+                    if (($anyoActual - $anyoDespliegue) >= 5) {
+                        $esAntiguo = true; // Si tiene 5 años o más, disparamos la alerta
+                    }
+                }
+
+                $datosIcecat = [
+                    'lanzamiento' => $infoPortatil['fecha_lanzamiento'],
+                    'aviso_obsolescencia' => $esAntiguo,
+                    'detalles' => $infoPortatil['nombre_oficial']
+                ];
+            }
+        }
+
+        return response()->json([
+            'dispositivo' => $dispositivo,
+            'api_ifixit' => $datosIFixit,
+            'api_icecat' => $datosIcecat // Enviamos los datos de Icecat a Vue
+        ]);
     }
 }

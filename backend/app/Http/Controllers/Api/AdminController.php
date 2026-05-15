@@ -3,82 +3,43 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Pedido;
-use App\Models\Averia;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
     /**
-     * Ver TODOS los pedidos (Para la tabla del panel de admin)
+     * Obtiene todos los pedidos con la información del cliente y dispositivo.
      */
-    public function getPedidos(Request $request)
+    public function getPedidos()
     {
-        // Seguridad: ¿Es administrador?
-        if ($request->user()->rol !== 'admin') {
-            return response()->json(['mensaje' => 'Acceso denegado. No eres administrador.'], 403);
-        }
-
-        // Traemos todos los pedidos, ordenados por los más recientes, y cargamos los datos del cliente
-        $pedidos = Pedido::with('user')->orderBy('created_at', 'desc')->get();
-        
-        return response()->json($pedidos, 200);
+        // Cargamos las relaciones para tener todos los datos en el panel [cite: 75]
+        $pedidos = Pedido::with(['usuario', 'lineasPedido.averia.dispositivo'])->get();
+        return response()->json($pedidos);
     }
 
     /**
-     * Cambiar el estado de un pedido (Ej: de 'recibido' a 'reparado')
+     * Actualiza el estado de una reparación (Recibido, En taller, Reparado, etc.).
      */
     public function updateEstadoPedido(Request $request, $id)
     {
-        if ($request->user()->rol !== 'admin') {
-            return response()->json(['mensaje' => 'Acceso denegado.'], 403);
-        }
+        $request->validate(['estado' => 'required|string']);
 
-        // Validamos que el estado sea uno de los permitidos
-        $request->validate([
-            'estado' => 'required|in:recibido,en_diagnostico,esperando_piezas,reparado,enviado'
-        ]);
-
-        $pedido = Pedido::find($id);
-
-        if (!$pedido) {
-            return response()->json(['mensaje' => 'Pedido no encontrado'], 404);
-        }
-
-        // Actualizamos y guardamos
+        $pedido = Pedido::findOrFail($id);
         $pedido->estado = $request->estado;
         $pedido->save();
 
-        return response()->json([
-            'mensaje' => 'Estado del pedido actualizado correctamente',
-            'pedido' => $pedido
-        ], 200);
+        return response()->json(['message' => 'Estado actualizado correctamente']);
     }
 
-    /**
-     * Añadir una nueva avería y precio a un dispositivo existente
-     */
-    public function storeAveria(Request $request)
+    //Simulación de recepción de solicitudes de restablecimiento de contraseña.
+    public function getSolicitudesPassword()
     {
-        if ($request->user()->rol !== 'admin') {
-            return response()->json(['mensaje' => 'Acceso denegado.'], 403);
-        }
-
-        $request->validate([
-            'dispositivo_id' => 'required|exists:dispositivos,id',
-            'nombre' => 'required|string|max:255',
-            'precio' => 'required|numeric|min:0'
-        ]);
-
-        $averia = Averia::create([
-            'dispositivo_id' => $request->dispositivo_id,
-            'nombre' => $request->nombre,
-            'precio' => $request->precio
-        ]);
-
+        // Aquí podrías filtrar usuarios que tengan un flag 'pide_reset' 
+        // o consultar una tabla específica de solicitudes.
         return response()->json([
-            'mensaje' => 'Nueva tarifa de avería creada',
-            'averia' => $averia
-        ], 201);
+            ['id' => 1, 'email' => 'cliente@ejemplo.com', 'fecha' => '2026-05-14', 'mensaje' => 'Olvidé mi clave']
+        ]);
     }
 }

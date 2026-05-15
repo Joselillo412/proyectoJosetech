@@ -4,28 +4,42 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Pedido extends Model
 {
     use HasFactory;
 
+    // Estos son los campos que Laravel PERMITIRÁ guardar. 
+    // Si falta uno aquí, MySQL dirá que "no tiene valor por defecto".
     protected $fillable = [
         'user_id',
+        'dispositivo_id',
         'codigo_seguimiento',
-        'estado',
-        'direccion_recogida',
-        'total',
+        'tipo_reparacion',
+        'descripcion',
+        'precio_estimado',
+        'estado'
     ];
 
-    // Relación: Un pedido pertenece a un usuario (cliente)
-    public function user()
+    public function usuario()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relación: Un pedido tiene varias líneas de detalle
-    public function lineas()
+    public function dispositivo()
     {
-        return $this->hasMany(LineaPedido::class);
+        return $this->belongsTo(Dispositivo::class, 'dispositivo_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($pedido) {
+            if (empty($pedido->codigo_seguimiento)) {
+                $pedido->codigo_seguimiento = 'JT-' . strtoupper(Str::random(6));
+            }
+        });
     }
 }

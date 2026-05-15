@@ -8,35 +8,38 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
 
 // ==========================================
-// 🔓 RUTAS PÚBLICAS (No hace falta Login)
+// 🔓 RUTAS PÚBLICAS (No exigen Login)
 // ==========================================
 
-// Autenticación
-Route::post('/register', [AuthController::class, 'register']);
+// Autenticación y Recuperación
+Route::post('/registro', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/password-forgot', [AuthController::class, 'solicitarReset']); // <-- Movida a pública
 
 // Catálogo
 Route::get('/dispositivos', [DispositivoController::class, 'index']);
 Route::get('/dispositivos/{id}', [DispositivoController::class, 'show']);
 
-// Seguimiento de pedido por código (cualquiera con el código puede verlo)
+// Seguimiento de pedido por código
 Route::get('/pedidos/track/{codigo}', [PedidoController::class, 'track']);
 
 
-// ==========================================
-// 🔒 RUTAS PRIVADAS (Requieren Token de Login)
-// ==========================================
+
+//  RUTAS PRIVADAS
 Route::middleware('auth:sanctum')->group(function () {
-    
-    // --- Rutas del Cliente ---
+
+    // --- Rutas Generales del Cliente ---
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/pedidos', [PedidoController::class, 'store']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    // --- Rutas del Administrador ---
-    Route::get('/admin/pedidos', [AdminController::class, 'getPedidos']);
-    Route::put('/admin/pedidos/{id}/estado', [AdminController::class, 'updateEstadoPedido']);
-    Route::post('/admin/averias', [AdminController::class, 'storeAveria']);
+    // Administrador 
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/pedidos', [AdminController::class, 'getPedidos']);
+        Route::put('/admin/pedidos/{id}/estado', [AdminController::class, 'updateEstadoPedido']);
+        Route::post('/admin/averias', [AdminController::class, 'storeAveria']);
+        Route::get('/admin/solicitudes-password', [AdminController::class, 'getSolicitudesPassword']);
+    });
 });

@@ -10,41 +10,37 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * REGISTRO DE NUEVO CLIENTE
-     */
+    // Registra un nuevo cliente en el sistema y devuelve su Token de acceso.
     public function register(Request $request)
     {
-        // 1. Validamos los datos que llegan desde Vue
+        // Validación estricta de los datos entrantes
         $request->validate([
-            'name' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'required|string|max:20',
+            'password' => 'required|string|min:8|confirmed', // Espera un campo password_confirmation
         ]);
 
-        // 2. Creamos el usuario en la base de datos (por defecto rol 'cliente')
+        // Creación del usuario con contraseña encriptada en Bcrypt
         $user = User::create([
-            'name' => $request->name,
+            'nombre' => $request->nombre,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Encriptamos la contraseña
             'telefono' => $request->telefono,
-            'rol' => 'cliente',
+            'password' => Hash::make($request->password), // Encriptación segura
+            'rol' => 'cliente', // Rol por defecto para nuevos registros
         ]);
 
-        // 3. Generamos su Token de acceso
+        // Generación del token Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'mensaje' => 'Usuario registrado con éxito',
-            'usuario' => $user,
-            'token' => $token
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
         ], 201);
     }
 
-    /**
-     * INICIO DE SESIÓN
-     */
+    // Autentica a un usuario existente.
     public function login(Request $request)
     {
         $request->validate([
@@ -52,39 +48,36 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Buscamos al usuario por su email
         $user = User::where('email', $request->email)->first();
 
-        // Comprobamos si el usuario existe y si la contraseña coincide
+        // Verificamos si el usuario existe y la contraseña coincide
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales son incorrectas.'],
+                'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
-        // Borramos tokens antiguos por seguridad (opcional, pero buena práctica)
-        $user->tokens()->delete();
-
-        // Generamos un nuevo token
+        // Generamos un nuevo token para esta sesión
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'mensaje' => 'Inicio de sesión correcto',
-            'usuario' => $user,
-            'token' => $token
-        ], 200);
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
+        ]);
     }
-
-    /**
-     * CERRAR SESIÓN
-     */
     public function logout(Request $request)
     {
-        // Destruimos el token que está usando actualmente
+        // Revoca el token que se usó para autenticar la petición actual
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'mensaje' => 'Sesión cerrada correctamente'
-        ], 200);
+            'message' => 'Sesión cerrada correctamente'
+        ]);
+    }
+    public function solicitarReset(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        return response()->json(['message' => 'Solicitud enviada. El administrador se pondrá en contacto contigo.']);
     }
 }

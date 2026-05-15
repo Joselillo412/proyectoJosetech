@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('marca'); 
             $table->string('modelo'); 
-            $table->enum('tipo', ['movil', 'consola', 'ordenador', 'otro']); 
+            $table->string('tipo');
             $table->string('imagen_url')->nullable();
             $table->timestamps();
         });

@@ -7,23 +7,25 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Ejecutar las migraciones (Crear la tabla).
      */
     public function up(): void
     {
         Schema::create('pedidos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('dispositivo_id')->constrained('dispositivos')->onDelete('cascade');
             $table->string('codigo_seguimiento')->unique();
-            $table->enum('estado', ['recibido', 'en_diagnostico', 'esperando_piezas', 'reparado', 'enviado'])->default('recibido');
-            $table->text('direccion_recogida');
-            $table->decimal('total', 8, 2)->default(0);
+            $table->string('tipo_reparacion');
+            $table->text('descripcion')->nullable();
+            $table->string('precio_estimado');
+            $table->string('estado')->default('Pendiente');
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Deshacer las migraciones.
      */
     public function down(): void
     {
