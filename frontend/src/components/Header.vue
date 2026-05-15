@@ -1,5 +1,5 @@
 <template>
-  <header class="header">
+  <header class="header" :class="{ 'header--oculto': !mostrarNavbar }">
     <router-link to="/" class="header__logo-link">
       <img class="header__logo" src="../../img/logo_sin_fondo.png" alt="Josetech Logo">
     </router-link>
@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -63,9 +63,34 @@ const cerrarMenu = () => {
   menuAbierto.value = false
 }
 
+// === LÓGICA DE LA CABECERA INTELIGENTE (SCROLL) ===
+const mostrarNavbar = ref(true)
+let ultimoScroll = 0
+
+const manejarScroll = () => {
+  // Evitamos que el menú desaparezca si está abierto en el móvil
+  if (menuAbierto.value) return;
+
+  const scrollActual = window.scrollY || document.documentElement.scrollTop
+
+  // Si bajamos más de 80px (para no ser muy agresivos al inicio)
+  if (scrollActual > ultimoScroll && scrollActual > 80) {
+    mostrarNavbar.value = false
+  } else {
+    // Si subimos, mostramos
+    mostrarNavbar.value = true
+  }
+  ultimoScroll = scrollActual
+}
+
 // Comprobar sesión al montar el componente
 onMounted(() => {
   verificarSesion()
+  window.addEventListener('scroll', manejarScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', manejarScroll)
 })
 
 /**
@@ -92,7 +117,6 @@ const verificarSesion = async () => {
     if (respuesta.ok) {
       usuarioAutenticado.value = await respuesta.json()
     } else {
-      // Si el token ha caducado o es inválido, limpiamos la sesión
       localStorage.removeItem('auth_token')
       usuarioAutenticado.value = null
     }
@@ -121,11 +145,10 @@ const cerrarSesion = async () => {
     }
   }
 
-  // Limpiamos el frontend y redirigimos
   localStorage.removeItem('auth_token')
   usuarioAutenticado.value = null
   cerrarMenu()
-  router.push('/')
+  window.location.href = '/' // Usamos esto para forzar la recarga
 }
 </script>
 
@@ -137,9 +160,19 @@ const cerrarSesion = async () => {
   justify-content: space-between;
   background-color: var(--secondary-background-color);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  
+  /* Mantengo position sticky, aunque para transform es mejor fixed, 
+     lo dejamos así para no romper tu layout, y le añadimos transition */
   position: sticky;
   top: 0;
   z-index: 50;
+  transition: transform 0.4s cubic-bezier(0.3, 1, 0.3, 1), box-shadow 0.3s ease;
+
+  /* Clase que se activa al hacer scroll hacia abajo */
+  &--oculto {
+    transform: translateY(-100%);
+    box-shadow: none;
+  }
 
   &__logo-link {
     display: flex;
@@ -286,7 +319,6 @@ const cerrarSesion = async () => {
   @media (max-width: 768px) {
     &__toggle {
       display: block;
-      /* Mostramos la hamburguesa */
     }
 
     &__nav {
@@ -303,7 +335,6 @@ const cerrarSesion = async () => {
       box-shadow: 0 15px 20px rgba(0, 0, 0, 0.1);
       transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s ease;
 
-      /* Clase dinámica para desplegar el menú */
       &--abierto {
         max-height: 500px;
         padding: 25px;

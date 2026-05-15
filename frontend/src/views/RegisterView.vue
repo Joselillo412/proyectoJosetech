@@ -37,7 +37,7 @@ const registrarUsuario = async () => {
       localStorage.setItem('auth_token', datos.access_token)
       
       // Forzamos la redirección a la home (el Navbar detectará el token automáticamente)
-      router.push('/')
+      window.location.href = '/';
     } else {
       // Capturamos errores de validación de Laravel (ej. email repetido, contraseñas cortas)
       if (datos.errors) {
