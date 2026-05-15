@@ -21,8 +21,7 @@ Route::get('/dispositivos', [DispositivoController::class, 'index']);
 Route::get('/dispositivos/{id}', [DispositivoController::class, 'show']);
 
 // Seguimiento de pedido por código
-Route::get('/pedidos/track/{codigo}', [PedidoController::class, 'track']);
-
+Route::get('/pedidos/seguimiento/{codigo}', [PedidoController::class, 'rastrear']);
 
 
 //  RUTAS PRIVADAS
@@ -34,12 +33,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+    Route::get('/mis-pedidos', [PedidoController::class, 'getMisPedidos']);
+    Route::put('/user/update', [UserController::class, 'updateProfile']);
 
     // Administrador 
-    Route::middleware('admin')->group(function () {
-        Route::get('/admin/pedidos', [AdminController::class, 'getPedidos']);
-        Route::put('/admin/pedidos/{id}/estado', [AdminController::class, 'updateEstadoPedido']);
-        Route::post('/admin/averias', [AdminController::class, 'storeAveria']);
-        Route::get('/admin/solicitudes-password', [AdminController::class, 'getSolicitudesPassword']);
+    Route::prefix('admin')->group(function () {
+        // Pedidos
+        Route::get('/pedidos', [AdminController::class, 'getPedidos']);
+        Route::put('/pedidos/{id}/estado', [AdminController::class, 'actualizarEstadoPedido']);
+
+        // Usuarios
+        Route::get('/usuarios', [AdminController::class, 'getUsuarios']);
+        Route::put('/usuarios/{id}/rol', [AdminController::class, 'actualizarRolUsuario']);
+        Route::put('/usuarios/{id}/password', [AdminController::class, 'actualizarPasswordUsuario']);
+
+        // Dispositivos (Crear, Editar, Borrar)
+        Route::post('/dispositivos', [AdminController::class, 'storeDispositivo']);
+        Route::put('/dispositivos/{id}', [AdminController::class, 'updateDispositivo']);
+        Route::delete('/dispositivos/{id}', [AdminController::class, 'destroyDispositivo']);
     });
 });

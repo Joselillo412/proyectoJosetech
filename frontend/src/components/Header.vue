@@ -23,9 +23,14 @@
 
       <div class="header__actions">
         <div v-if="usuarioAutenticado" class="header__user">
-          <span class="header__user-name">
-            <i class="fa-solid fa-circle-user"></i> {{ usuarioAutenticado.nombre }}
-          </span>
+
+          <router-link to="/perfil" class="header__user-name" @click="cerrarMenu">
+            <img v-if="usuarioAutenticado.avatar_url" :src="usuarioAutenticado.avatar_url" class="nav-avatar"
+              alt="Perfil">
+            <i v-else class="fa-solid fa-circle-user"></i>
+            {{ usuarioAutenticado.nombre }}
+          </router-link>
+
           <button @click="cerrarSesion" class="header__btn header__btn--logout">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
           </button>
@@ -68,16 +73,13 @@ const mostrarNavbar = ref(true)
 let ultimoScroll = 0
 
 const manejarScroll = () => {
-  // Evitamos que el menú desaparezca si está abierto en el móvil
   if (menuAbierto.value) return;
 
   const scrollActual = window.scrollY || document.documentElement.scrollTop
 
-  // Si bajamos más de 80px (para no ser muy agresivos al inicio)
   if (scrollActual > ultimoScroll && scrollActual > 80) {
     mostrarNavbar.value = false
   } else {
-    // Si subimos, mostramos
     mostrarNavbar.value = true
   }
   ultimoScroll = scrollActual
@@ -160,7 +162,7 @@ const cerrarSesion = async () => {
   justify-content: space-between;
   background-color: var(--secondary-background-color);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  
+
   /* Mantengo position sticky, aunque para transform es mejor fixed, 
      lo dejamos así para no romper tu layout, y le añadimos transition */
   position: sticky;
@@ -254,12 +256,27 @@ const cerrarSesion = async () => {
       display: flex;
       align-items: center;
       gap: 8px;
+      text-decoration: none;
+      transition: color 0.3s;
+
+      &:hover {
+        color: var(--main-color);
+      }
 
       i {
         color: var(--main-color);
         font-size: 1.2rem;
       }
     }
+  }
+
+  /* Estilo para la foto de perfil en el Navbar */
+  .nav-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--main-color);
   }
 
   /* Botones generales */

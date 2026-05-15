@@ -27,12 +27,11 @@ const nuevoDispositivo = ref({
 const mostrarModalEditar = ref(false)
 const dispositivoEditando = ref({ id: null, marca: '', modelo: '', tipo: '', imagen_url: '' })
 
-// === OPTIMIZACIÓN: BUSCADOR Y PAGINACIÓN DE DISPOSITIVOS ===
+// === OPTIMIZACIÓN: BUSCADOR Y PAGINACIÓN ===
 const busquedaDispositivo = ref('')
 const paginaActualDisp = ref(1)
-const itemsPorPaginaDisp = 5
+const itemsPorPaginaDisp = 10 // <-- Lista fijada a 10 elementos
 
-// Volver a la página 1 si el usuario escribe en el buscador
 watch(busquedaDispositivo, () => {
     paginaActualDisp.value = 1
 })
@@ -54,6 +53,15 @@ const dispositivosPaginados = computed(() => {
     const inicio = (paginaActualDisp.value - 1) * itemsPorPaginaDisp
     const fin = inicio + itemsPorPaginaDisp
     return dispositivosFiltrados.value.slice(inicio, fin)
+})
+
+// Magia visual: Calcula cuántas filas faltan para llegar a 10 y rellenar el hueco
+const filasVaciasDisp = computed(() => {
+    const cantidadActual = dispositivosPaginados.value.length
+    if (cantidadActual > 0 && cantidadActual < itemsPorPaginaDisp) {
+        return itemsPorPaginaDisp - cantidadActual
+    }
+    return 0
 })
 
 const cambiarPagina = (delta) => {
@@ -173,7 +181,6 @@ const guardarDispositivo = async () => {
         return alert("El modelo y la URL de la imagen son obligatorios")
     }
 
-    // Validación ANTI-DUPLICADOS
     const existe = dispositivos.value.some(d =>
         d.marca.toLowerCase() === nuevoDispositivo.value.marca.toLowerCase() &&
         d.modelo.toLowerCase() === nuevoDispositivo.value.modelo.trim().toLowerCase()
@@ -210,7 +217,6 @@ const eliminarDispositivo = async (id) => {
 
         if (res.ok) {
             dispositivos.value = dispositivos.value.filter(d => d.id !== id)
-            // Si la página se queda vacía, retrocedemos una
             if (dispositivosPaginados.value.length === 0 && paginaActualDisp.value > 1) {
                 paginaActualDisp.value--
             }
@@ -234,7 +240,6 @@ const guardarEdicionDispositivo = async () => {
         return alert('Modelo y URL son obligatorios')
     }
 
-    // Validación ANTI-DUPLICADOS al editar (excluyendo el dispositivo actual)
     const existe = dispositivos.value.some(d =>
         d.id !== dispositivoEditando.value.id &&
         d.marca.toLowerCase() === dispositivoEditando.value.marca.toLowerCase() &&
@@ -325,7 +330,7 @@ const guardarPrecios = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="pedido in pedidos" :key="pedido.id">
+                            <tr v-for="pedido in pedidos" :key="pedido.id" class="table-row">
                                 <td>
                                     <span class="fw-bold">#{{ pedido.id }}</span>
                                     <small class="d-block text-muted">{{ pedido.codigo_seguimiento }}</small>
@@ -368,7 +373,7 @@ const guardarPrecios = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="user in usuarios" :key="user.id">
+                            <tr v-for="user in usuarios" :key="user.id" class="table-row">
                                 <td class="client-name">{{ user.nombre }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>
@@ -450,7 +455,7 @@ const guardarPrecios = () => {
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-fixed-wrapper">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -460,7 +465,7 @@ const guardarPrecios = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="disp in dispositivosPaginados" :key="disp.id">
+                                <tr v-for="disp in dispositivosPaginados" :key="disp.id" class="table-row">
                                     <td>
                                         <img v-if="disp.imagen_url" :src="disp.imagen_url" class="mini-thumb"
                                             alt="disp">
@@ -469,9 +474,14 @@ const guardarPrecios = () => {
                                     <td class="device-name">{{ disp.marca }}</td>
                                     <td class="fw-bold">{{ disp.modelo }}</td>
                                 </tr>
+
+                                <tr v-for="i in filasVaciasDisp" :key="'empty-add-' + i" class="table-row empty-row">
+                                    <td colspan="3"></td>
+                                </tr>
+
                                 <tr v-if="dispositivosPaginados.length === 0">
-                                    <td colspan="3" class="text-center text-muted py-4">No se encontraron dispositivos
-                                    </td>
+                                    <td colspan="3" class="text-center text-muted py-4 table-row">No se encontraron
+                                        dispositivos</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -502,7 +512,7 @@ const guardarPrecios = () => {
                     </div>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-fixed-wrapper">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -514,7 +524,7 @@ const guardarPrecios = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="disp in dispositivosPaginados" :key="disp.id">
+                            <tr v-for="disp in dispositivosPaginados" :key="disp.id" class="table-row">
                                 <td class="fw-bold text-muted">#{{ disp.id }}</td>
                                 <td>
                                     <img v-if="disp.imagen_url" :src="disp.imagen_url" class="mini-thumb" alt="disp">
@@ -533,8 +543,14 @@ const guardarPrecios = () => {
                                     </div>
                                 </td>
                             </tr>
+
+                            <tr v-for="i in filasVaciasDisp" :key="'empty-del-' + i" class="table-row empty-row">
+                                <td colspan="5"></td>
+                            </tr>
+
                             <tr v-if="dispositivosPaginados.length === 0">
-                                <td colspan="5" class="text-center text-muted py-4">No se encontraron dispositivos</td>
+                                <td colspan="5" class="text-center text-muted py-4 table-row">No se encontraron
+                                    dispositivos</td>
                             </tr>
                         </tbody>
                     </table>
@@ -845,7 +861,7 @@ const guardarPrecios = () => {
     }
 }
 
-/* Botones de Acción (Editar/Borrar/Guardar) */
+/* Botones de Acción */
 .action-buttons {
     display: flex;
     gap: 10px;
@@ -971,7 +987,7 @@ const guardarPrecios = () => {
     }
 }
 
-/* Tablas */
+/* Tablas con altura fija (Anti Layout Shift) */
 .table-responsive {
     width: 100%;
     overflow-x: auto;
@@ -993,19 +1009,31 @@ const guardarPrecios = () => {
     }
 
     td {
-        padding: 15px;
+        padding: 10px 15px;
         border-bottom: 1px solid #f1f5f9;
         vertical-align: middle;
     }
 
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    tr:hover {
+    tr:hover:not(.empty-row) {
         background-color: #fcfcfd;
     }
 }
+
+.table-row {
+    height: 75px;
+}
+
+/* Altura obligatoria para que todas las filas midan igual */
+.empty-row {
+    background-color: transparent !important;
+    border-bottom: 1px solid transparent !important;
+
+    td {
+        border: none !important;
+    }
+}
+
+/* Oculta visualmente las filas fantasmas */
 
 .fw-bold {
     font-weight: 700;
