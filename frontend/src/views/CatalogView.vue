@@ -24,7 +24,7 @@ import { ref, computed, onMounted } from 'vue'
             </li>
 
             <li class="hero__item">
-                <a class="hero__link" href="#">
+                <a class="hero__link" href="/catalogo/tablets">
                     <div class="hero__image-container">
                         <img src="../../img/tablet.png" alt="Tablet">
                         <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
@@ -34,17 +34,7 @@ import { ref, computed, onMounted } from 'vue'
             </li>
 
             <li class="hero__item">
-                <a class="hero__link" href="#">
-                    <div class="hero__image-container">
-                        <img src="../../img/smartwatch.avif" alt="Smartwatch">
-                        <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
-                    </div>
-                    <span class="hero__item-label">Smartwatches</span>
-                </a>
-            </li>
-
-            <li class="hero__item">
-                <a class="hero__link" href="#">
+                <a class="hero__link" href="/catalogo/consolas">
                     <div class="hero__image-container">
                         <img src="../../img/videoconsola.jpg" alt="Videoconsola">
                         <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
@@ -54,9 +44,9 @@ import { ref, computed, onMounted } from 'vue'
             </li>
 
             <li class="hero__item">
-                <a class="hero__link" href="#">
+                <a class="hero__link" href="/catalogo/portatiles">
                     <div class="hero__image-container">
-                        <img src="../../img/portatil.jpeg" alt="">
+                        <img src="../../img/portatil.jpeg" alt="Portátil">
                         <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
                     </div>
                     <span class="hero__item-label">Portátiles</span>

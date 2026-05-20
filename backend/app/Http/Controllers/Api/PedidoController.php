@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pedido;
+use App\Models\User;
+use App\Mail\PedidoClienteMail;
+use App\Mail\PedidoAdminMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PedidoController extends Controller
 {
     /**
-     * Guarda un nuevo pedido de reparación en la base de datos.
+     * Guarda un nuevo pedido de reparación en la base de datos y notifica por email.
      */
     public function store(Request $request)
     {
@@ -22,6 +26,7 @@ class PedidoController extends Controller
         ]);
 
         // Creamos el pedido asignándolo automáticamente al usuario logueado
+        // Añadimos ->load() para que tenga listos los datos del cliente y móvil para el correo
         $pedido = Pedido::create([
             'user_id' => $request->user()->id,
             'dispositivo_id' => $request->dispositivo_id,
@@ -29,7 +34,25 @@ class PedidoController extends Controller
             'descripcion' => $request->descripcion,
             'precio_estimado' => $request->precio_estimado,
             'estado' => 'Pendiente'
-        ]);
+        ])->load(['usuario', 'dispositivo']);
+
+        // --- BLOQUE DE ENVÍO DE CORREOS ---
+        try {
+            // 1. Disparamos el correo bonito hacia el email del cliente
+            Mail::to($pedido->usuario->email)->send(new PedidoClienteMail($pedido));
+
+            // 2. Buscamos todos los correos de tu base de datos que tengan rol 'admin'
+            $admins = User::where('rol', 'admin')->pluck('email');
+
+            // Si hay administradores, les mandamos la alerta de nuevo pedido
+            if ($admins->isNotEmpty()) {
+                Mail::to($admins)->send(new PedidoAdminMail($pedido));
+            }
+        } catch (\Exception $e) {
+            // Si hay algún problema con el servidor de correo o internet, se guarda en el log
+            // de Laravel, pero el pedido se confirma igual para no molestar al cliente.
+            \Log::error('Error al enviar los emails de notificación: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Pedido registrado con éxito',

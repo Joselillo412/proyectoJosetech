@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DispositivoController;
 use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\UserController; // <-- ¡Faltaba importar esto!
 
 // ==========================================
 // 🔓 RUTAS PÚBLICAS (No exigen Login)
@@ -14,7 +15,7 @@ use App\Http\Controllers\Api\AdminController;
 // Autenticación y Recuperación
 Route::post('/registro', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/password-forgot', [AuthController::class, 'solicitarReset']); // <-- Movida a pública
+Route::post('/password-forgot', [AuthController::class, 'solicitarReset']); 
 
 // Catálogo
 Route::get('/dispositivos', [DispositivoController::class, 'index']);
@@ -23,8 +24,13 @@ Route::get('/dispositivos/{id}', [DispositivoController::class, 'show']);
 // Seguimiento de pedido por código
 Route::get('/pedidos/seguimiento/{codigo}', [PedidoController::class, 'rastrear']);
 
+// Servicios públicos
+Route::get('/servicios', [AdminController::class, 'getServicios']);
 
-//  RUTAS PRIVADAS
+
+// ==========================================
+// 🔒 RUTAS PRIVADAS
+// ==========================================
 Route::middleware('auth:sanctum')->group(function () {
 
     // --- Rutas Generales del Cliente ---
@@ -36,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mis-pedidos', [PedidoController::class, 'getMisPedidos']);
     Route::put('/user/update', [UserController::class, 'updateProfile']);
 
-    // Administrador 
+    // --- Administrador ---
     Route::prefix('admin')->group(function () {
         // Pedidos
         Route::get('/pedidos', [AdminController::class, 'getPedidos']);
@@ -47,9 +53,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/usuarios/{id}/rol', [AdminController::class, 'actualizarRolUsuario']);
         Route::put('/usuarios/{id}/password', [AdminController::class, 'actualizarPasswordUsuario']);
 
-        // Dispositivos (Crear, Editar, Borrar)
+        // Dispositivos 
         Route::post('/dispositivos', [AdminController::class, 'storeDispositivo']);
         Route::put('/dispositivos/{id}', [AdminController::class, 'updateDispositivo']);
         Route::delete('/dispositivos/{id}', [AdminController::class, 'destroyDispositivo']);
+        
+        // Servicios (¡CORREGIDO! Ya no lleva /admin aquí porque el grupo ya lo tiene)
+        Route::post('/servicios', [AdminController::class, 'storeServicio']);
+        Route::put('/servicios/{id}', [AdminController::class, 'updateServicio']);
+        Route::delete('/servicios/{id}', [AdminController::class, 'destroyServicio']);
+        
+        // Contabilidad
+        Route::get('/contabilidad', [AdminController::class, 'getContabilidad']);
+        Route::post('/contabilidad', [AdminController::class, 'storeContabilidad']);
     });
 });

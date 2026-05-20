@@ -12,10 +12,10 @@
     <nav class="header__nav" :class="{ 'header__nav--abierto': menuAbierto }">
       <ul class="header__nav-list">
         <li><router-link to="/" @click="cerrarMenu">Inicio</router-link></li>
+        <li><router-link to="/solicitar-reparacion" @click="cerrarMenu">Solicitar reparación</router-link></li>
         <li><router-link to="/catalogo" @click="cerrarMenu">Catálogo</router-link></li>
         <li><router-link to="/galeria" @click="cerrarMenu">Galería</router-link></li>
         <li><router-link to="/consulta" @click="cerrarMenu">Consulta</router-link></li>
-        <li><router-link to="/quienes-somos" @click="cerrarMenu">Quiénes somos</router-link></li>
         <li v-if="usuarioAutenticado && usuarioAutenticado.rol === 'admin'">
           <router-link to="/admin" @click="cerrarMenu">Panel Admin</router-link>
         </li>

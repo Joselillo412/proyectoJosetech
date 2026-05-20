@@ -4,17 +4,18 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const dispositivoId = route.params.id
 
-// Variables de estado del servidor
+const parametroId = route.params.id
+const esCustom = parametroId === 'custom'
+const modeloPersonalizado = route.query.modelo || 'Equipo sin especificar'
+const ID_DISPOSITIVO_GENERICO = 1
+
 const dispositivo = ref(null)
 const ifixitInfo = ref(null)
 const icecatInfo = ref(null)
 const cargando = ref(true)
 const error = ref(false)
 
-// --- LÓGICA DE SELECCIÓN MULTI-AVERÍA ---
-// Catálogo completo de reparaciones Josetech (Precios Base Aprox.)
 const serviciosCat = [
   { id: 'bat', nombre: 'Cambio de Batería', precio: 60, icono: 'fa-solid fa-battery-half' },
   { id: 'pan', nombre: 'Cambio de Pantalla', precio: 90, extraNota: '60€-120€ según el tipo de pantalla', icono: 'fa-solid fa-mobile-screen' },
@@ -27,31 +28,26 @@ const serviciosCat = [
   { id: 'aur', nombre: 'Auricular Llamadas', precio: 20, icono: 'fa-solid fa-phone-volume' }
 ]
 
-// Array que guarda los IDs de los servicios seleccionados por el cliente
-const serviciosSeleccionados = ref(['pan']) // Dejamos Pantalla pre-marcada por defecto
-
-// Formulario final
+const serviciosSeleccionados = ref(['pan'])
 const descripcionProblema = ref('')
 const enviando = ref(false)
 const mensajeExito = ref(false)
 const errorEnvio = ref('')
 
-// Alternar selección (Añadir/Quitar del carrito de averías)
+// NUEVO: Variable para guardar el código devuelto por Laravel
+const codigoSeguimientoGenerado = ref('')
+
 const toggleServicio = (id) => {
   const index = serviciosSeleccionados.value.indexOf(id)
   if (index > -1) {
-    // Si ya está, lo quitamos (asegurando que al menos quede uno, o permitiendo vaciarlo)
     serviciosSeleccionados.value.splice(index, 1)
   } else {
-    // Si no está, lo añadimos
     serviciosSeleccionados.value.push(id)
   }
 }
 
-// Comprueba si un servicio está marcado para aplicarle el CSS naranja
 const estaSeleccionado = (id) => serviciosSeleccionados.value.includes(id)
 
-// Cálculo reactivo del precio total estimado
 const sumaTotalEstimada = computed(() => {
   return serviciosSeleccionados.value.reduce((total, id) => {
     const serv = serviciosCat.find(s => s.id === id)
@@ -59,7 +55,6 @@ const sumaTotalEstimada = computed(() => {
   }, 0)
 })
 
-// Devuelve los nombres literales seleccionados para mandarlos a la base de datos
 const resumenNombresSeleccionados = computed(() => {
   return serviciosSeleccionados.value
     .map(id => serviciosCat.find(s => s.id === id)?.nombre)
@@ -68,10 +63,21 @@ const resumenNombresSeleccionados = computed(() => {
 
 const formatearFecha = (f) => f ? new Date(f).toLocaleDateString('es-ES') : 'N/A';
 
-// Cargar información del Backend
 onMounted(async () => {
+  if (esCustom) {
+    dispositivo.value = {
+      id: ID_DISPOSITIVO_GENERICO,
+      marca: 'Dispositivo no catalogado',
+      modelo: modeloPersonalizado,
+      tipo: 'Otros',
+      imagen_url: ''
+    }
+    cargando.value = false
+    return
+  }
+
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/dispositivos/${dispositivoId}`)
+    const res = await fetch(`http://127.0.0.1:8000/api/dispositivos/${parametroId}`)
     if (!res.ok) throw new Error()
     const data = await res.json()
 
@@ -85,7 +91,6 @@ onMounted(async () => {
   }
 })
 
-// Enviar el pedido compuesto al Backend
 const enviarSolicitud = async () => {
   if (serviciosSeleccionados.value.length === 0) {
     alert('Por favor, selecciona al menos una reparación para calcular el presupuesto.')
@@ -102,6 +107,13 @@ const enviarSolicitud = async () => {
   enviando.value = true
   errorEnvio.value = ''
   mensajeExito.value = false
+  codigoSeguimientoGenerado.value = '' // Limpiamos por si acaso
+
+  const descripcionFinal = esCustom
+    ? `[MODELO CUSTOM: ${modeloPersonalizado}] - ${descripcionProblema.value || 'Sin detalles adicionales'}`
+    : (descripcionProblema.value || 'Sin detalles adicionales')
+
+  const idAEnviar = esCustom ? ID_DISPOSITIVO_GENERICO : parametroId
 
   try {
     const respuesta = await fetch('http://127.0.0.1:8000/api/pedidos', {
@@ -112,21 +124,24 @@ const enviarSolicitud = async () => {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        dispositivo_id: dispositivoId,
-        // Mandamos la cadena unida (Ej: "Cambio de Pantalla, Cambio de Batería")
+        dispositivo_id: idAEnviar,
         tipo_reparacion: resumenNombresSeleccionados.value,
-        descripcion: descripcionProblema.value || 'Sin detalles adicionales',
-        // Mandamos el string con el precio combinado calculado
+        descripcion: descripcionFinal,
         precio_estimado: `${sumaTotalEstimada.value}€ Aprox.`
       })
     })
 
+    const datos = await respuesta.json()
+
     if (respuesta.ok) {
       mensajeExito.value = true
       descripcionProblema.value = ''
-      serviciosSeleccionados.value = [] // Limpiamos selección
+      serviciosSeleccionados.value = []
+
+      // GUARDAMOS EL CÓDIGO QUE NOS MANDA LARAVEL
+      codigoSeguimientoGenerado.value = datos.pedido.codigo_seguimiento
+
     } else {
-      const datos = await respuesta.json()
       errorEnvio.value = datos.message || 'Error al procesar la solicitud.'
     }
   } catch (e) {
@@ -147,10 +162,16 @@ const enviarSolicitud = async () => {
     <div v-else-if="error" class="state-msg error">
       <i class="fa-solid fa-circle-exclamation"></i>
       <p>No se pudo obtener la información del dispositivo.</p>
-      <router-link to="/" class="btn-action">Volver al buscador</router-link>
+      <router-link to="/solicitar-reparacion" class="btn-action">Volver al buscador</router-link>
     </div>
 
     <div v-else class="content fade-in">
+
+      <div v-if="esCustom" class="custom-alert mb-4">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Estás solicitando presupuesto para un modelo que no está en nuestro catálogo habitual. Nuestros técnicos
+          confirmarán las piezas una vez reciban el equipo.</span>
+      </div>
 
       <header class="device-header">
         <div class="device-image-box">
@@ -218,7 +239,7 @@ const enviarSolicitud = async () => {
             </div>
             <p v-if="ifixitInfo.coste_extra_mano_obra > 0" class="note">
               * Este modelo presenta sellado adhesivo complejo de destapar.
-            <br /><br />
+              <br /><br />
               * Este modelo prensenta problemas de acceso a componentes internos.
             </p>
           </div>
@@ -249,11 +270,18 @@ const enviarSolicitud = async () => {
         </div>
 
         <div v-if="mensajeExito" class="alert-success">
-          <i class="fa-solid fa-circle-check"></i>
-          <div>
+          <i class="fa-solid fa-circle-check main-icon"></i>
+          <div class="success-content">
             <h4>¡Solicitud enviada con éxito!</h4>
             <p>Hemos registrado tu orden combinada en nuestro taller. Te contactaremos por teléfono para coordinar el
               transporte.</p>
+
+            <div class="tracking-box">
+              <span class="tracking-label">Tu código de seguimiento es:</span>
+              <strong class="tracking-code">{{ codigoSeguimientoGenerado }}</strong>
+              <span class="tracking-hint"><i class="fa-solid fa-user"></i> Puedes consultarlo en cualquier momento desde
+                la pestaña "Mis Pedidos" en tu Perfil de Usuario.</span>
+            </div>
           </div>
         </div>
 
@@ -274,7 +302,7 @@ const enviarSolicitud = async () => {
         </form>
 
         <div v-if="mensajeExito" class="actions-footer">
-          <router-link to="/" class="btn-secondary">Volver al Buscador Principal</router-link>
+          <router-link to="/perfil" class="btn-secondary"><i class="fa-solid fa-user"></i> Ir a Mi Perfil</router-link>
         </div>
       </section>
     </div>
@@ -291,7 +319,6 @@ const enviarSolicitud = async () => {
   color: var(--text-color);
 }
 
-/* === CABECERA === */
 .device-header {
   display: flex;
   align-items: center;
@@ -355,7 +382,6 @@ const enviarSolicitud = async () => {
   text-transform: uppercase;
 }
 
-/* === GRID DE SERVICIOS MÚLTIPLES === */
 .tarifas-section {
   margin-bottom: 40px;
 }
@@ -412,7 +438,6 @@ const enviarSolicitud = async () => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Evita que el usuario arrastre la tarjeta al hacer clics rápidos */
   user-select: none;
 
   &:hover {
@@ -436,7 +461,6 @@ const enviarSolicitud = async () => {
   }
 }
 
-/* Checkbox esquinero */
 .checkbox-indicator {
   position: absolute;
   top: 15px;
@@ -503,7 +527,6 @@ const enviarSolicitud = async () => {
   }
 }
 
-/* BARRA FLOTANTE DE RESUMEN DE PRECIO */
 .resumen-bar {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: white;
@@ -566,7 +589,6 @@ const enviarSolicitud = async () => {
   }
 }
 
-/* === APIS EXTRA === */
 .grid-layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -657,7 +679,6 @@ const enviarSolicitud = async () => {
   gap: 10px;
 }
 
-/* === FORMULARIO === */
 .contact-section {
   background: white;
   padding: 35px;
@@ -733,34 +754,69 @@ textarea {
   }
 }
 
-/* Alertas */
 .alert-success {
   background-color: #f0fdf4;
   border: 1px solid #bbf7d0;
-  padding: 20px;
+  padding: 25px;
   border-radius: 16px;
   display: flex;
-  gap: 15px;
+  gap: 20px;
   align-items: flex-start;
   color: #166534;
+  margin-bottom: 20px;
+}
 
-  i {
-    font-size: 1.8rem;
-    color: #22c55e;
-    margin-top: 2px;
-  }
+.main-icon {
+  font-size: 2.5rem;
+  color: #22c55e;
+  margin-top: 5px;
+}
+
+.success-content {
+  flex-grow: 1;
 
   h4 {
-    margin: 0 0 5px 0;
-    font-size: 1.1rem;
-    font-weight: 700;
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+    font-weight: 800;
   }
 
   p {
-    margin: 0;
-    font-size: 0.95rem;
+    margin: 0 0 15px 0;
+    font-size: 1rem;
     color: #15803d;
-    line-height: 1.4;
+    line-height: 1.5;
+  }
+}
+
+.tracking-box {
+  background: white;
+  border: 2px dashed #86efac;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+
+  .tracking-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #166534;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .tracking-code {
+    display: block;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--main-color);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .tracking-hint {
+    display: block;
+    font-size: 0.85rem;
+    color: #15803d;
   }
 }
 
@@ -783,9 +839,21 @@ textarea {
 }
 
 .btn-secondary {
-  color: var(--main-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  background: #0f172a;
+  padding: 12px 25px;
+  border-radius: 10px;
   font-weight: 700;
   text-decoration: none;
+  transition: 0.2s;
+
+  &:hover {
+    background: #1e293b;
+    transform: translateY(-2px);
+  }
 }
 
 .fade-in {
@@ -829,6 +897,29 @@ textarea {
   animation: spin 1s linear infinite;
 }
 
+.custom-alert {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  padding: 15px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  i {
+    font-size: 1.2rem;
+    margin-top: 2px;
+    color: #3b82f6;
+  }
+}
+
+.mb-4 {
+  margin-bottom: 25px;
+}
+
 @media (max-width: 768px) {
   .device-header {
     flex-direction: column;
@@ -854,6 +945,17 @@ textarea {
     .resumen-total {
       text-align: center;
     }
+  }
+
+  .alert-success {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .tracking-box .tracking-code {
+    font-size: 1.5rem;
   }
 }
 </style>
