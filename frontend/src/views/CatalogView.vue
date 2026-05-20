@@ -44,13 +44,13 @@ import { ref, computed, onMounted } from 'vue'
             </li>
 
             <li class="hero__item">
-                <a class="hero__link" href="/catalogo/portatiles">
+                <router-link :to="{ path: '/presupuesto/custom', query: { tipo: 'portatil' } }" class="hero__link">
                     <div class="hero__image-container">
-                        <img src="../../img/portatil.jpeg" alt="Portátil">
+                        <img src="../../img/portatil.jpeg" alt="Reparación de Portátiles">
                         <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
                     </div>
                     <span class="hero__item-label">Portátiles</span>
-                </a>
+                </router-link>
             </li>
         </ul>
     </section>

@@ -241,13 +241,13 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
                         <tbody>
                             <tr v-for="pedido in pedidos" :key="pedido.id" class="table-row">
                                 <td><span class="fw-bold">#{{ pedido.id }}</span><small class="d-block text-muted">{{
-                                        pedido.codigo_seguimiento }}</small></td>
+                                    pedido.codigo_seguimiento }}</small></td>
                                 <td><span class="client-name">{{ pedido.usuario?.nombre || 'Borrado' }}</span></td>
                                 <td><span class="device-name">{{ pedido.dispositivo?.marca }} {{
-                                        pedido.dispositivo?.modelo }}</span></td>
+                                    pedido.dispositivo?.modelo }}</span></td>
                                 <td><span class="repair-types">{{ pedido.tipo_reparacion }}</span></td>
                                 <td><span class="status-pill" :class="pedido.estado.toLowerCase().replace(' ', '-')">{{
-                                        pedido.estado }}</span></td>
+                                    pedido.estado }}</span></td>
                                 <td>
                                     <select class="status-select" :value="pedido.estado"
                                         @change="actualizarEstado(pedido.id, $event.target.value)">
@@ -285,7 +285,7 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
                                 <td>{{ user.email }}</td>
                                 <td><span class="status-pill"
                                         :class="user.rol === 'admin' ? 'reparado' : 'entregado'">{{
-                                        user.rol.toUpperCase() }}</span></td>
+                                            user.rol.toUpperCase() }}</span></td>
                                 <td>
                                     <select class="status-select" :value="user.rol"
                                         @change="cambiarRol(user.id, $event.target.value)">
@@ -324,6 +324,18 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
                                 <option value="Xiaomi">Xiaomi</option>
                                 <option value="Google">Google</option>
                                 <option value="OnePlus">OnePlus</option>
+                                <option value="Huawei">Huawei</option>
+                                <option value="Honor">Honor</option>
+                                <option value="Nothing">Nothing</option>
+                                <option value="Motorola">Motorola</option>
+                                <option value="POCO">POCO</option>
+                                <option value="Vivo">Vivo</option>
+                                <option value="Oppo">Oppo</option>
+                                <option value="Realme">Realme</option>
+                                <option value="Lenovo">Lenovo</option>
+                                <option value="Sony">Sony</option>
+                                <option value="Microsoft">Microsoft</option>
+                                <option value="Nintendo">Nintendo</option>
                             </select>
                         </div>
                         <div class="input-group">
@@ -337,7 +349,6 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
                                 <option value="Tablet">Tablet</option>
                                 <option value="Portátil">Portátil</option>
                                 <option value="Consola">Consola</option>
-                                <option value="Ordenador">Ordenador</option>
                             </select>
                         </div>
                         <div class="input-group">
@@ -447,7 +458,9 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
                     <div class="form-grid">
                         <div class="input-group">
                             <label>ID del Pedido Finalizado</label>
-                            <input type="number" v-model="nuevaContabilidad.pedido_id" placeholder="Ej: 14" required>
+                            <input type="text" v-model="nuevaContabilidad.pedido_id" placeholder="Ej: JT-KDWVK8"
+                                pattern="JT-[A-Za-z0-9]{6}"
+                                title="El formato debe ser JT- seguido de 6 caracteres alfanuméricos" required>
                         </div>
                         <div class="input-group">
                             <label>Piezas Cambiadas (Opcional)</label>
@@ -516,8 +529,7 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
                                 </td>
                                 <td style="color: #dc2626; font-weight: 700;">-{{
                                     parseFloat(item.coste_piezas).toFixed(2) }} €</td>
-                                <td style="color: #2563eb; font-weight: 700;">+{{ parseFloat(item.ganancias).toFixed(2)
-                                    }} €</td>
+                                <td style="color: #2563eb; font-weight: 700;">+{{ parseFloat(item.ganancias).toFixed(2) }} €</td>
                                 <td style="color: #166534; font-weight: 800; font-size: 1rem;">{{
                                     parseFloat(item.total_cobrado).toFixed(2) }} €</td>
                                 <td>
@@ -539,6 +551,60 @@ const cajaTotalAcumulada = computed(() => contabilidad.value.reduce((acc, item) 
         </div>
 
         <div v-if="mostrarModalEditar" class="modal-overlay" @click.self="cerrarModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Editar Dispositivo</h2>
+                    <button class="btn-close" @click="cerrarModal">&times;</button>
+                </div>
+
+                <form @submit.prevent="guardarEdicionDispositivo">
+                    <div class="input-group mb-3">
+                        <label>Marca</label>
+                        <select v-model="dispositivoEditando.marca" required>
+                            <option value="Apple">Apple</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="Xiaomi">Xiaomi</option>
+                            <option value="Google">Google</option>
+                            <option value="OnePlus">OnePlus</option>
+                            <option value="Huawei">Huawei</option>
+                            <option value="Honor">Honor</option>
+                            <option value="Nothing">Nothing</option>
+                            <option value="Motorola">Motorola</option>
+                            <option value="POCO">POCO</option>
+                            <option value="Vivo">Vivo</option>
+                            <option value="Oppo">Oppo</option>
+                            <option value="Realme">Realme</option>
+                            <option value="Lenovo">Lenovo</option>
+                            <option value="Sony">Sony</option>
+                            <option value="Microsoft">Microsoft</option>
+                            <option value="Nintendo">Nintendo</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-3">
+                        <label>Modelo</label>
+                        <input type="text" v-model="dispositivoEditando.modelo" required>
+                    </div>
+                    <div class="input-group mb-3">
+                        <label>Tipo</label>
+                        <select v-model="dispositivoEditando.tipo">
+                            <option value="Smartphone">Smartphone</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Portátil">Portátil</option>
+                            <option value="Consola">Consola</option>
+                            <option value="Ordenador">Ordenador</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-3">
+                        <label>URL Imagen</label>
+                        <input type="url" v-model="dispositivoEditando.imagen_url" required>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn-cancel" @click="cerrarModal">Cancelar</button>
+                        <button type="submit" class="btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </main>
 </template>

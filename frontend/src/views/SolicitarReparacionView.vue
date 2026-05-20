@@ -73,88 +73,101 @@ const continuarManual = () => {
 </script>
 
 <template>
-    <main class="solicitud-container fade-in">
-        <div class="wizard-header">
-            <span class="step-badge">Paso 1 de 2</span>
-            <h1>¿Qué equipo necesitas reparar?</h1>
-            <p>Busca tu modelo en nuestro catálogo o escríbelo si no lo encuentras en la lista.</p>
-        </div>
+    <main class="solicitud fade-in">
 
-        <div class="search-box">
-            <div class="input-wrapper">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" v-model="busqueda" placeholder="Ej: iPhone 13 Pro, Samsung S23..."
-                    class="device-input" autofocus>
-                <button v-if="busqueda" @click="busqueda = ''" class="clear-btn">
-                    <i class="fa-solid fa-xmark"></i>
+        <header class="solicitud__cabecera">
+            <span class="solicitud__etiqueta-paso" aria-label="Paso 1 de 2">Paso 1 de 2</span>
+            <h1 id="titulo-buscador" class="solicitud__titulo">¿Qué equipo necesitas reparar?</h1>
+            <p class="solicitud__descripcion">Busca tu modelo en nuestro catálogo o escríbelo si no lo encuentras en la
+                lista.</p>
+        </header>
+
+        <section class="solicitud__buscador" aria-labelledby="titulo-buscador">
+            <div class="solicitud__buscador-contenedor">
+                <i class="fa-solid fa-magnifying-glass solicitud__buscador-icono" aria-hidden="true"></i>
+                <input type="search" v-model="busqueda" placeholder="Ej: iPhone 13 Pro, Samsung S23..."
+                    class="solicitud__buscador-input" aria-label="Buscar dispositivo por marca o modelo" autofocus>
+                <button v-if="busqueda" @click="busqueda = ''" class="solicitud__buscador-limpiar" type="button"
+                    aria-label="Borrar búsqueda">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
-        </div>
+        </section>
 
-        <div v-if="cargando" class="loading-state">
-            <span class="spinner"></span>
+        <div v-if="cargando" class="solicitud__estado" role="status" aria-live="polite">
+            <span class="solicitud__spinner" aria-hidden="true"></span>
             <p>Cargando catálogo...</p>
         </div>
 
-        <div v-else class="results-container">
+        <section v-else class="solicitud__resultados" aria-live="polite">
 
-            <transition-group name="list" tag="div" class="device-grid">
-                <div v-for="disp in dispositivosPaginados" :key="disp.id" class="device-card"
+            <transition-group name="lista" tag="div" class="solicitud__cuadricula" role="list">
+                <button v-for="disp in dispositivosPaginados" :key="disp.id" class="solicitud__tarjeta" type="button"
+                    role="listitem" :aria-label="`Seleccionar ${disp.marca} ${disp.modelo}`"
                     @click="seleccionarDispositivo(disp)">
-                    <div class="device-img-wrapper">
+                    <div class="solicitud__tarjeta-imagen" aria-hidden="true">
                         <img v-if="disp.imagen_url" :src="disp.imagen_url" :alt="disp.modelo">
-                        <i v-else class="fa-solid fa-mobile-screen placeholder-icon"></i>
+                        <i v-else class="fa-solid fa-mobile-screen solicitud__tarjeta-icono-placeholder"></i>
                     </div>
-                    <div class="device-info">
-                        <span class="brand">{{ disp.marca }}</span>
-                        <h3 class="model">{{ disp.modelo }}</h3>
+                    <div class="solicitud__tarjeta-info">
+                        <span class="solicitud__tarjeta-marca">{{ disp.marca }}</span>
+                        <h3 class="solicitud__tarjeta-modelo">{{ disp.modelo }}</h3>
                     </div>
-                    <div class="arrow-icon">
+                    <div class="solicitud__tarjeta-flecha" aria-hidden="true">
                         <i class="fa-solid fa-chevron-right"></i>
                     </div>
-                </div>
+                </button>
             </transition-group>
 
-            <div class="pagination-controls" v-if="totalPaginas > 1 && dispositivosPaginados.length > 0">
-                <button @click="cambiarPagina(-1)" :disabled="paginaActual === 1" class="btn-page">
-                    <i class="fa-solid fa-chevron-left"></i> Anterior
+            <nav class="solicitud__paginacion" v-if="totalPaginas > 1 && dispositivosPaginados.length > 0"
+                aria-label="Paginación de resultados">
+                <button @click="cambiarPagina(-1)" :disabled="paginaActual === 1" class="solicitud__btn-pagina"
+                    type="button" aria-label="Ir a la página anterior">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Anterior
                 </button>
-                <span class="page-info">Página {{ paginaActual }} de {{ totalPaginas }}</span>
-                <button @click="cambiarPagina(1)" :disabled="paginaActual === totalPaginas" class="btn-page">
-                    Siguiente <i class="fa-solid fa-chevron-right"></i>
+                <span class="solicitud__paginacion-info" aria-live="polite">Página {{ paginaActual }} de {{ totalPaginas
+                    }}</span>
+                <button @click="cambiarPagina(1)" :disabled="paginaActual === totalPaginas"
+                    class="solicitud__btn-pagina" type="button" aria-label="Ir a la página siguiente">
+                    Siguiente <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                 </button>
-            </div>
+            </nav>
 
-            <div v-if="dispositivosFiltrados.length === 0 && busqueda.trim() !== ''" class="manual-entry-card fade-in">
-                <div class="icon-box">
+            <article v-if="dispositivosFiltrados.length === 0 && busqueda.trim() !== ''"
+                class="solicitud__alerta-manual fade-in">
+                <div class="solicitud__alerta-icono" aria-hidden="true">
                     <i class="fa-solid fa-screwdriver-wrench"></i>
                 </div>
-                <div class="text-box">
+                <div class="solicitud__alerta-texto">
                     <h3>No encontramos "{{ busqueda }}"</h3>
                     <p>¡No pasa nada! Haz clic en continuar y cuéntanos qué le pasa a tu equipo.</p>
                 </div>
-                <button @click="continuarManual" class="btn-manual">
-                    Continuar con este equipo <i class="fa-solid fa-arrow-right"></i>
+                <button @click="continuarManual" class="solicitud__btn-manual" type="button">
+                    Continuar con este equipo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </button>
-            </div>
-        </div>
+            </article>
+
+        </section>
     </main>
 </template>
 
 <style scoped lang="scss">
-/* (MANTENEMOS TUS ESTILOS ORIGINALES Y AÑADIMOS LA PAGINACIÓN) */
-.solicitud-container {
+/* ==========================================================================
+   METODOLOGÍA BEM (Block, Element, Modifier) 
+   ========================================================================== */
+
+.solicitud {
     max-width: 900px;
     margin: 40px auto;
     padding: 40px 20px;
     min-height: 70vh;
-}
 
-.wizard-header {
-    text-align: center;
-    margin-bottom: 40px;
+    &__cabecera {
+        text-align: center;
+        margin-bottom: 40px;
+    }
 
-    .step-badge {
+    &__etiqueta-paso {
         background-color: #f1f5f9;
         color: var(--main-color);
         padding: 6px 15px;
@@ -167,24 +180,24 @@ const continuarManual = () => {
         margin-bottom: 15px;
     }
 
-    h1 {
+    &__titulo {
         font-size: 2.5rem;
         font-weight: 800;
         color: #0f172a;
         margin: 0 0 10px 0;
     }
 
-    p {
+    &__descripcion {
         color: #64748b;
         font-size: 1.1rem;
     }
-}
 
-/* BUSCADOR */
-.search-box {
-    margin-bottom: 30px;
+    /* --- Buscador --- */
+    &__buscador {
+        margin-bottom: 30px;
+    }
 
-    .input-wrapper {
+    &__buscador-contenedor {
         position: relative;
         max-width: 600px;
         margin: 0 auto;
@@ -199,7 +212,7 @@ const continuarManual = () => {
         }
     }
 
-    .search-icon {
+    &__buscador-icono {
         position: absolute;
         left: 20px;
         top: 50%;
@@ -208,7 +221,7 @@ const continuarManual = () => {
         font-size: 1.2rem;
     }
 
-    .device-input {
+    &__buscador-input {
         width: 100%;
         padding: 20px 50px;
         border: 2px solid #e2e8f0;
@@ -218,6 +231,12 @@ const continuarManual = () => {
         outline: none;
         transition: border-color 0.3s;
         color: #0f172a;
+        font-family: inherit;
+
+        /* Evita el aspa por defecto del input search en algunos navegadores para usar la nuestra */
+        &::-webkit-search-cancel-button {
+            display: none;
+        }
 
         &:focus {
             border-color: var(--main-color);
@@ -229,7 +248,7 @@ const continuarManual = () => {
         }
     }
 
-    .clear-btn {
+    &__buscador-limpiar {
         position: absolute;
         right: 15px;
         top: 50%;
@@ -244,46 +263,64 @@ const continuarManual = () => {
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: background-color 0.2s, color 0.2s;
 
         &:hover {
             background: #e2e8f0;
             color: #0f172a;
         }
-    }
-}
 
-/* GRILLA DE DISPOSITIVOS */
-.device-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.device-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-
-    &:hover {
-        border-color: var(--main-color);
-        box-shadow: 0 10px 20px rgba(var(--main-color-rgb, 217, 106, 26), 0.1);
-        transform: translateY(-3px);
-
-        .arrow-icon {
-            color: var(--main-color);
-            transform: translateX(3px);
+        &:focus-visible {
+            outline: 2px solid var(--main-color);
+            outline-offset: 2px;
         }
     }
 
-    .device-img-wrapper {
+    /* --- Cuadrícula de Resultados --- */
+    &__cuadricula {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    &__tarjeta {
+        /* Reseteo de estilos de botón */
+        appearance: none;
+        background: white;
+        text-align: left;
+        font-family: inherit;
+        width: 100%;
+        /* Estilos de la tarjeta */
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+
+        &:hover {
+            border-color: var(--main-color);
+            box-shadow: 0 10px 20px rgba(var(--main-color-rgb, 217, 106, 26), 0.1);
+            transform: translateY(-3px);
+
+            .solicitud__tarjeta-flecha {
+                color: var(--main-color);
+                transform: translateX(3px);
+            }
+        }
+
+        &:focus-visible {
+            outline: 3px solid var(--main-color);
+            outline-offset: 2px;
+            border-color: var(--main-color);
+        }
+    }
+
+    &__tarjeta-imagen {
         width: 60px;
         height: 60px;
         border-radius: 12px;
@@ -298,47 +335,48 @@ const continuarManual = () => {
             height: 100%;
             object-fit: contain;
         }
-
-        .placeholder-icon {
-            font-size: 1.8rem;
-            color: #cbd5e1;
-        }
     }
 
-    .device-info {
+    &__tarjeta-icono-placeholder {
+        font-size: 1.8rem;
+        color: #cbd5e1;
+    }
+
+    &__tarjeta-info {
         flex-grow: 1;
-
-        .brand {
-            font-size: 0.8rem;
-            color: #64748b;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .model {
-            margin: 0;
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: #0f172a;
-        }
     }
 
-    .arrow-icon {
+    &__tarjeta-marca {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: block;
+    }
+
+    &__tarjeta-modelo {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    &__tarjeta-flecha {
         color: #cbd5e1;
         transition: all 0.3s;
     }
-}
 
-/* ENTRADA MANUAL */
-.manual-entry-card {
-    background: #f8fafc;
-    border: 2px dashed #cbd5e1;
-    border-radius: 16px;
-    padding: 30px;
-    text-align: center;
-    margin-top: 20px;
+    /* --- Alerta de Entrada Manual --- */
+    &__alerta-manual {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        margin-top: 20px;
+    }
 
-    .icon-box {
+    &__alerta-icono {
         width: 60px;
         height: 60px;
         background: white;
@@ -352,7 +390,7 @@ const continuarManual = () => {
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
 
-    .text-box {
+    &__alerta-texto {
         margin-bottom: 20px;
 
         h3 {
@@ -367,7 +405,7 @@ const continuarManual = () => {
         }
     }
 
-    .btn-manual {
+    &__btn-manual {
         background: var(--main-color);
         color: white;
         border: none;
@@ -379,26 +417,32 @@ const continuarManual = () => {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: 0.2s;
+        transition: transform 0.2s, background-color 0.2s;
+        font-family: inherit;
 
         &:hover {
             background: var(--secondary-color, #b55612);
             transform: translateY(-2px);
         }
+
+        &:focus-visible {
+            outline: 3px solid #0f172a;
+            outline-offset: 3px;
+        }
     }
-}
 
-/* PAGINACIÓN */
-.pagination-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f1f5f9;
+    /* --- Paginación --- */
+    &__paginacion {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
 
-    .btn-page {
+    &__btn-pagina {
         background: white;
         border: 1px solid #cbd5e1;
         padding: 10px 20px;
@@ -410,11 +454,17 @@ const continuarManual = () => {
         display: flex;
         align-items: center;
         gap: 8px;
+        font-family: inherit;
 
         &:hover:not(:disabled) {
             border-color: var(--main-color);
             color: var(--main-color);
             box-shadow: 0 4px 10px rgba(var(--main-color-rgb, 217, 106, 26), 0.1);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--main-color);
+            outline-offset: 2px;
         }
 
         &:disabled {
@@ -424,85 +474,89 @@ const continuarManual = () => {
         }
     }
 
-    .page-info {
+    &__paginacion-info {
         font-weight: 700;
         color: #64748b;
         font-size: 0.95rem;
     }
-}
 
-/* ESTADOS Y ANIMACIONES */
-.loading-state {
-    text-align: center;
-    padding: 60px 0;
+    /* --- Estados (Carga / Animaciones) --- */
+    &__estado {
+        text-align: center;
+        padding: 60px 0;
 
-    p {
-        color: #64748b;
-        font-weight: 600;
-        margin-top: 15px;
+        p {
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+    }
+
+    &__spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(var(--main-color-rgb, 217, 106, 26), 0.2);
+        border-top-color: var(--main-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     }
 }
 
-.spinner {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(var(--main-color-rgb, 217, 106, 26), 0.2);
-    border-top-color: var(--main-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
+/* Animaciones Globales */
 .fade-in {
     animation: fadeIn 0.4s ease-out;
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.list-enter-active,
-.list-leave-active {
+.lista-enter-active,
+.lista-leave-active {
     transition: all 0.3s ease;
 }
 
-.list-enter-from,
-.list-leave-to {
+.lista-enter-from,
+.lista-leave-to {
     opacity: 0;
     transform: scale(0.95);
 }
 
+/* --- Media Queries --- */
 @media (max-width: 768px) {
-    .wizard-header h1 {
-        font-size: 2rem;
-    }
+    .solicitud {
+        &__titulo {
+            font-size: 2rem;
+        }
 
-    .device-grid {
-        grid-template-columns: 1fr;
-    }
+        &__cuadricula {
+            grid-template-columns: 1fr;
+        }
 
-    .pagination-controls {
-        flex-direction: column;
-        gap: 15px;
-        width: 100%;
-
-        .btn-page {
+        &__paginacion {
+            flex-direction: column;
+            gap: 15px;
             width: 100%;
-            justify-content: center;
+
+            .solicitud__btn-pagina {
+                width: 100%;
+                justify-content: center;
+            }
         }
     }
 }

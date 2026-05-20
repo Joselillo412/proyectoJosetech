@@ -205,9 +205,10 @@ onUnmounted(() => {
             <span class="stat-label">Equipos Reparados</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">+10K</span>
-            <span class="stat-label">Repuestos Originales</span>
+            <span class="stat-number">99%</span>
+            <span class="stat-label">De acierto <br>(si fallamos pagamos nosotros)</span>
           </div>
+          
           <div class="stat-item">
             <span class="stat-number">3 años</span>
             <span class="stat-label">De experiencia</span>

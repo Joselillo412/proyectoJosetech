@@ -173,20 +173,28 @@ class AdminController extends Controller
     public function storeContabilidad(Request $request)
     {
         $this->checkAdmin($request);
-
         $data = $request->validate([
-            'pedido_id' => 'required|exists:pedidos,id',
+            'pedido_id' => 'required|string',
             'piezas_cambiadas' => 'nullable|string',
             'coste_piezas' => 'required|numeric',
             'total_cobrado' => 'required|numeric',
             'metodo_pago' => 'required|string'
         ]);
+        $pedido = Pedido::where('codigo_seguimiento', $data['pedido_id'])->first();
 
-        // Las ganancias ya vienen calculadas desde Vue, pero por seguridad 
-        // las recalculamos también en el servidor
-        $data['ganancias'] = $data['total_cobrado'] - $data['coste_piezas'];
+        if (!$pedido) {
+            return response()->json(['message' => 'No se encontró un pedido con ese código de seguimiento.'], 404);
+        }
+        $datosGuardar = [
+            'pedido_id' => $pedido->id,
+            'piezas_cambiadas' => $data['piezas_cambiadas'],
+            'coste_piezas' => $data['coste_piezas'],
+            'total_cobrado' => $data['total_cobrado'],
+            'metodo_pago' => $data['metodo_pago'],
+            'ganancias' => $data['total_cobrado'] - $data['coste_piezas']
+        ];
 
-        Contabilidad::create($data);
+        Contabilidad::create($datosGuardar);
 
         return response()->json(['message' => 'Asiento contable guardado correctamente']);
     }

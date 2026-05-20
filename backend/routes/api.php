@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\DispositivoController;
 use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\UserController; // <-- ¡Faltaba importar esto!
+use App\Http\Controllers\Api\UserController;
 
 // ==========================================
 // 🔓 RUTAS PÚBLICAS (No exigen Login)
