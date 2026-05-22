@@ -11,12 +11,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_pgsql zip
 
 # 3. Activamos el módulo rewrite de Apache (esencial para las rutas de Laravel)
-RUN a2enmod rewrite
+RRUN a2enmod rewrite
 
-# 4. Cambiamos la ruta pública de Apache para que apunte a la carpeta /public de Laravel
+# 4. Cambiamos la ruta pública de Apache para que apunte a /public de Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# NUEVO: Permitir que Apache lea el archivo .htaccess de Laravel
+RUN echo "<Directory /var/www/html/public>\n\tAllowOverride All\n</Directory>" >> /etc/apache2/apache2.conf
 
 # 5. Descargamos e instalamos Composer de forma oficial
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
