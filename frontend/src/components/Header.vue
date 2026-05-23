@@ -108,7 +108,7 @@ const verificarSesion = async () => {
   }
 
   try {
-    const respuesta = await fetch('http://127.0.0.1:8000/api/user', {
+    const respuesta = await fetch('https://proyectojosetech.onrender.com/api/user', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -135,7 +135,7 @@ const cerrarSesion = async () => {
 
   if (token) {
     try {
-      await fetch('http://127.0.0.1:8000/api/logout', {
+      await fetch('https://proyectojosetech.onrender.com/api/logout', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

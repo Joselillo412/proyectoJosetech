@@ -9,7 +9,7 @@ const cargando = ref(true)
 // Llamada a Laravel para cargar el catálogo global
 onMounted(async () => {
   try {
-    const respuesta = await fetch('http://127.0.0.1:8000/api/dispositivos')
+    const respuesta = await fetch('https://proyectojosetech.onrender.com/api/dispositivos')
     const datos = await respuesta.json()
     catalogo.value = datos
   } catch (error) {

@@ -84,40 +84,40 @@ const getHeaders = () => ({
 
 // === MÉTODOS CRUD BÁSICOS (Pedidos, Usuarios, Dispositivos) ===
 const cargarPedidos = async () => { /* ... (Se mantiene igual) ... */
-    cargando.value = true; try { const res = await fetch('http://127.0.0.1:8000/api/admin/pedidos', { headers: getHeaders() }); if (res.ok) pedidos.value = await res.json() } catch (error) { console.error(error) } finally { cargando.value = false }
+    cargando.value = true; try { const res = await fetch('https://proyectojosetech.onrender.com/api/admin/pedidos', { headers: getHeaders() }); if (res.ok) pedidos.value = await res.json() } catch (error) { console.error(error) } finally { cargando.value = false }
 }
 const actualizarEstado = async (id, nuevoEstado) => {
-    try { const res = await fetch(`http://127.0.0.1:8000/api/admin/pedidos/${id}/estado`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ estado: nuevoEstado }) }); if (res.ok) { const pedido = pedidos.value.find(p => p.id === id); if (pedido) pedido.estado = nuevoEstado } } catch (error) { console.error(error) }
+    try { const res = await fetch(`https://proyectojosetech.onrender.com/api/admin/pedidos/${id}/estado`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ estado: nuevoEstado }) }); if (res.ok) { const pedido = pedidos.value.find(p => p.id === id); if (pedido) pedido.estado = nuevoEstado } } catch (error) { console.error(error) }
 }
 const cargarUsuarios = async () => {
-    cargando.value = true; try { const res = await fetch('http://127.0.0.1:8000/api/admin/usuarios', { headers: getHeaders() }); if (res.ok) { const data = await res.json(); usuarios.value = data.map(u => ({ ...u, nueva_password: '' })) } } catch (error) { console.error(error) } finally { cargando.value = false }
+    cargando.value = true; try { const res = await fetch('https://proyectojosetech.onrender.com/api/admin/usuarios', { headers: getHeaders() }); if (res.ok) { const data = await res.json(); usuarios.value = data.map(u => ({ ...u, nueva_password: '' })) } } catch (error) { console.error(error) } finally { cargando.value = false }
 }
 const cambiarRol = async (id, nuevoRol) => {
-    try { const res = await fetch(`http://127.0.0.1:8000/api/admin/usuarios/${id}/rol`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ rol: nuevoRol }) }); if (res.ok) { const u = usuarios.value.find(u => u.id === id); if (u) u.rol = nuevoRol } } catch (error) { console.error(error) }
+    try { const res = await fetch(`https://proyectojosetech.onrender.com/api/admin/usuarios/${id}/rol`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ rol: nuevoRol }) }); if (res.ok) { const u = usuarios.value.find(u => u.id === id); if (u) u.rol = nuevoRol } } catch (error) { console.error(error) }
 }
 const actualizarPassword = async (id, nuevaClave) => {
-    if (!nuevaClave || nuevaClave.length < 6) return alert('La contraseña debe tener al menos 6 caracteres.'); try { const res = await fetch(`http://127.0.0.1:8000/api/admin/usuarios/${id}/password`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ password: nuevaClave }) }); if (res.ok) { alert('Contraseña actualizada correctamente.'); const u = usuarios.value.find(u => u.id === id); if (u) u.nueva_password = '' } else { alert('Hubo un error al actualizar la contraseña.') } } catch (error) { console.error(error) }
+    if (!nuevaClave || nuevaClave.length < 6) return alert('La contraseña debe tener al menos 6 caracteres.'); try { const res = await fetch(`https://proyectojosetech.onrender.com/api/admin/usuarios/${id}/password`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ password: nuevaClave }) }); if (res.ok) { alert('Contraseña actualizada correctamente.'); const u = usuarios.value.find(u => u.id === id); if (u) u.nueva_password = '' } else { alert('Hubo un error al actualizar la contraseña.') } } catch (error) { console.error(error) }
 }
 const cargarDispositivos = async () => {
-    cargando.value = true; try { const res = await fetch('http://127.0.0.1:8000/api/dispositivos', { headers: getHeaders() }); if (res.ok) dispositivos.value = await res.json() } catch (error) { console.error(error) } finally { cargando.value = false }
+    cargando.value = true; try { const res = await fetch('https://proyectojosetech.onrender.com/api/dispositivos', { headers: getHeaders() }); if (res.ok) dispositivos.value = await res.json() } catch (error) { console.error(error) } finally { cargando.value = false }
 }
 const guardarDispositivo = async () => {
-    if (!nuevoDispositivo.value.modelo || !nuevoDispositivo.value.imagen_url) return alert("El modelo y la URL de la imagen son obligatorios"); const existe = dispositivos.value.some(d => d.marca.toLowerCase() === nuevoDispositivo.value.marca.toLowerCase() && d.modelo.toLowerCase() === nuevoDispositivo.value.modelo.trim().toLowerCase()); if (existe) return alert(`El dispositivo ${nuevoDispositivo.value.marca} ${nuevoDispositivo.value.modelo} ya existe.`); try { const res = await fetch('http://127.0.0.1:8000/api/admin/dispositivos', { method: 'POST', headers: getHeaders(), body: JSON.stringify(nuevoDispositivo.value) }); if (res.ok) { alert('¡Dispositivo añadido al catálogo!'); nuevoDispositivo.value.modelo = ''; nuevoDispositivo.value.imagen_url = ''; await cargarDispositivos() } } catch (error) { console.error(error) }
+    if (!nuevoDispositivo.value.modelo || !nuevoDispositivo.value.imagen_url) return alert("El modelo y la URL de la imagen son obligatorios"); const existe = dispositivos.value.some(d => d.marca.toLowerCase() === nuevoDispositivo.value.marca.toLowerCase() && d.modelo.toLowerCase() === nuevoDispositivo.value.modelo.trim().toLowerCase()); if (existe) return alert(`El dispositivo ${nuevoDispositivo.value.marca} ${nuevoDispositivo.value.modelo} ya existe.`); try { const res = await fetch('https://proyectojosetech.onrender.com/api/admin/dispositivos', { method: 'POST', headers: getHeaders(), body: JSON.stringify(nuevoDispositivo.value) }); if (res.ok) { alert('¡Dispositivo añadido al catálogo!'); nuevoDispositivo.value.modelo = ''; nuevoDispositivo.value.imagen_url = ''; await cargarDispositivos() } } catch (error) { console.error(error) }
 }
 const eliminarDispositivo = async (id) => {
-    if (!confirm('¿Borrar este dispositivo del catálogo?')) return; try { const res = await fetch(`http://127.0.0.1:8000/api/admin/dispositivos/${id}`, { method: 'DELETE', headers: getHeaders() }); if (res.ok) { dispositivos.value = dispositivos.value.filter(d => d.id !== id); if (dispositivosPaginados.value.length === 0 && paginaActualDisp.value > 1) paginaActualDisp.value--; alert('Dispositivo eliminado') } } catch (error) { console.error(error) }
+    if (!confirm('¿Borrar este dispositivo del catálogo?')) return; try { const res = await fetch(`https://proyectojosetech.onrender.com/api/admin/dispositivos/${id}`, { method: 'DELETE', headers: getHeaders() }); if (res.ok) { dispositivos.value = dispositivos.value.filter(d => d.id !== id); if (dispositivosPaginados.value.length === 0 && paginaActualDisp.value > 1) paginaActualDisp.value--; alert('Dispositivo eliminado') } } catch (error) { console.error(error) }
 }
 const abrirModalEditar = (disp) => { dispositivoEditando.value = { ...disp }; mostrarModalEditar.value = true }
 const cerrarModal = () => { mostrarModalEditar.value = false }
 const guardarEdicionDispositivo = async () => {
-    if (!dispositivoEditando.value.modelo || !dispositivoEditando.value.imagen_url) return alert('Modelo y URL son obligatorios'); const existe = dispositivos.value.some(d => d.id !== dispositivoEditando.value.id && d.marca.toLowerCase() === dispositivoEditando.value.marca.toLowerCase() && d.modelo.toLowerCase() === dispositivoEditando.value.modelo.trim().toLowerCase()); if (existe) return alert(`Ya existe otro equipo con ese nombre.`); try { const res = await fetch(`http://127.0.0.1:8000/api/admin/dispositivos/${dispositivoEditando.value.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(dispositivoEditando.value) }); if (res.ok) { alert('¡Dispositivo actualizado!'); await cargarDispositivos(); cerrarModal() } } catch (error) { console.error(error) }
+    if (!dispositivoEditando.value.modelo || !dispositivoEditando.value.imagen_url) return alert('Modelo y URL son obligatorios'); const existe = dispositivos.value.some(d => d.id !== dispositivoEditando.value.id && d.marca.toLowerCase() === dispositivoEditando.value.marca.toLowerCase() && d.modelo.toLowerCase() === dispositivoEditando.value.modelo.trim().toLowerCase()); if (existe) return alert(`Ya existe otro equipo con ese nombre.`); try { const res = await fetch(`https://proyectojosetech.onrender.com/api/admin/dispositivos/${dispositivoEditando.value.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(dispositivoEditando.value) }); if (res.ok) { alert('¡Dispositivo actualizado!'); await cargarDispositivos(); cerrarModal() } } catch (error) { console.error(error) }
 }
 
 // === LÓGICA DE PRECIOS (SOLO EDITAR) ===
 const cargarServicios = async () => {
     cargando.value = true
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/servicios', { headers: getHeaders() })
+        const res = await fetch('https://proyectojosetech.onrender.com/api/servicios', { headers: getHeaders() })
         if (res.ok) servicios.value = await res.json()
     } catch (error) { console.error('Error cargando tarifas:', error) }
     finally { cargando.value = false }
@@ -125,7 +125,7 @@ const cargarServicios = async () => {
 
 const actualizarPrecio = async (id, precioNuevo) => {
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/admin/servicios/${id}`, {
+        const res = await fetch(`https://proyectojosetech.onrender.com/api/admin/servicios/${id}`, {
             method: 'PUT',
             headers: getHeaders(),
             body: JSON.stringify({ precio: precioNuevo })
@@ -139,7 +139,7 @@ const actualizarPrecio = async (id, precioNuevo) => {
 const cargarContabilidad = async () => {
     cargando.value = true
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin/contabilidad', { headers: getHeaders() })
+        const res = await fetch('https://proyectojosetech.onrender.com/api/admin/contabilidad', { headers: getHeaders() })
         if (res.ok) contabilidad.value = await res.json()
     } catch (error) { console.error('Error cargando contabilidad:', error) }
     finally { cargando.value = false }
@@ -154,7 +154,7 @@ const guardarContabilidad = async () => {
     const gananciasNetas = parseFloat(nuevaContabilidad.value.total_cobrado) - parseFloat(nuevaContabilidad.value.coste_piezas);
 
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin/contabilidad', {
+        const res = await fetch('https://proyectojosetech.onrender.com/api/admin/contabilidad', {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify({
