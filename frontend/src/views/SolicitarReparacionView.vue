@@ -19,7 +19,7 @@ watch(busqueda, () => {
 // Cargar el catálogo completo al entrar
 onMounted(async () => {
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/dispositivos', {
+        const res = await fetch('https://proyectojosetech.onrender.com/api/dispositivos', {
             headers: { 'Accept': 'application/json' }
         })
         if (res.ok) {

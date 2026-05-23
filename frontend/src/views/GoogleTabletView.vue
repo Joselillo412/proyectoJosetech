@@ -10,7 +10,7 @@ const imagenFallback = 'https://static.vecteezy.com/system/resources/previews/06
 
 onMounted(async () => {
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/dispositivos')
+        const res = await fetch('https://proyectojosetech.onrender.com/api/dispositivos')
         const datos = await res.json()
         modelos.value = datos.filter(d => d.marca === 'Google' && d.tipo === 'Tablet')
     } catch (e) {

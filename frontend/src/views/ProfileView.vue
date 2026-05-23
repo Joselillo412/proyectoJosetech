@@ -41,7 +41,7 @@ onMounted(async () => {
 const cargarMisPedidos = async () => {
     const token = localStorage.getItem('auth_token')
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/mis-pedidos', {
+        const res = await fetch('https://proyectojosetech.onrender.com/api/mis-pedidos', {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         if (res.ok) misPedidos.value = await res.json()
@@ -52,7 +52,7 @@ const actualizarPerfil = async () => {
     enviando.value = true
     const token = localStorage.getItem('auth_token')
     try {
-        const res = await fetch('http://127.0.0.1:8000/api/user/update', {
+        const res = await fetch('https://proyectojosetech.onrender.com/api/user/update', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

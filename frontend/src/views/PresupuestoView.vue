@@ -92,7 +92,7 @@ onMounted(async () => {
   } else {
     // ... tu lógica de fetch para dispositivos existentes ...
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/dispositivos/${parametroId}`)
+      const res = await fetch(`https://proyectojosetech.onrender.com/api/dispositivos/${parametroId}`)
       if (!res.ok) throw new Error()
       const data = await res.json()
       dispositivo.value = data.dispositivo
@@ -105,7 +105,7 @@ onMounted(async () => {
 
   // 2. CARGAMOS LOS SERVICIOS DE LA BASE DE DATOS
   try {
-    const resServicios = await fetch('http://127.0.0.1:8000/api/servicios')
+    const resServicios = await fetch('https://proyectojosetech.onrender.com/api/servicios')
     if (resServicios.ok) {
       serviciosCat.value = await resServicios.json()
 
@@ -145,7 +145,7 @@ const enviarSolicitud = async () => {
   const idAEnviar = esCustom ? ID_DISPOSITIVO_GENERICO : parametroId
 
   try {
-    const respuesta = await fetch('http://127.0.0.1:8000/api/pedidos', {
+    const respuesta = await fetch('https://proyectojosetech.onrender.com/api/pedidos', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

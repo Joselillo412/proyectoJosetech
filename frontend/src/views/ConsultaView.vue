@@ -22,7 +22,7 @@ const buscarPedido = async () => {
 
     try {
         // NOTA: Esta ruta la crearemos en el backend en el siguiente paso
-        const res = await fetch(`http://127.0.0.1:8000/api/pedidos/seguimiento/${codigoLimpio}`, {
+        const res = await fetch(`https://proyectojosetech.onrender.com/api/pedidos/seguimiento/${codigoLimpio}`, {
             headers: { 'Accept': 'application/json' }
         })
 

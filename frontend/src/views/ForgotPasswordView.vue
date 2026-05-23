@@ -5,7 +5,7 @@ const email = ref('')
 const enviado = ref(false)
 
 const enviarSolicitud = async () => {
-    await fetch('http://127.0.0.1:8000/api/password-forgot', {
+    await fetch('https://proyectojosetech.onrender.com/api/password-forgot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.value })

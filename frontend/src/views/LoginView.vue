@@ -18,7 +18,7 @@ const iniciarSesion = async () => {
   cargando.value = true
 
   try {
-    const respuesta = await fetch('http://127.0.0.1:8000/api/login', {
+    const respuesta = await fetch('https://proyectojosetech.onrender.com/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
