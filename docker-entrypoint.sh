@@ -7,5 +7,8 @@ php artisan config:clear
 echo "Ejecutando migraciones..."
 php artisan migrate --force
 
+echo "Resembrando datos..."
+php artisan db:seed --force
+
 echo "Iniciando Apache..."
 apache2-foreground
